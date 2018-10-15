@@ -31,7 +31,7 @@ namespace Todolist.Service.Auth.Controllers
         }
 
         [HttpPost]
-        public async Task<object> Login(LoginViewModel model)
+        public async Task<string> Login(LoginViewModel model)
         {
             var result = await signInManager.PasswordSignInAsync(model.Name, model.Password, false, false);
             if (result.Succeeded)
@@ -42,7 +42,7 @@ namespace Todolist.Service.Auth.Controllers
             throw new ApplicationException("INVALID_LOGIN_ATTEMPT");
         }
 
-        private async Task<object> GenerateJwtToken(User user)
+        private Task<string> GenerateJwtToken(User user)
         {
             var claims = new List<Claim>
             {
@@ -63,7 +63,8 @@ namespace Todolist.Service.Auth.Controllers
                 signingCredentials : creds
             );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var result = new JwtSecurityTokenHandler().WriteToken(token);
+            return Task.FromResult(result);
         }
 
         public class LoginViewModel

@@ -13,6 +13,5 @@ namespace Todolist.Service.Auth.Configuration
                 return Encoding.UTF8.GetBytes(JwtSecretKey);
             }
         }
-
     }
 }
