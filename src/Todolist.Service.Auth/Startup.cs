@@ -20,6 +20,7 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Todolist.Service.Auth.Configuration;
 using Todolist.Service.Auth.Models;
+using Todolist.Service.Auth.Services;
 
 namespace Todolist.Service.Auth
 {
@@ -74,6 +75,8 @@ namespace Todolist.Service.Auth
                     };
                 });
 
+            //DI 
+            services.AddTransient<IAccountService, DefaultAccountService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

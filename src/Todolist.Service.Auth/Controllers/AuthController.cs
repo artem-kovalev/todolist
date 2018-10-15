@@ -9,7 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Todolist.Service.Auth.Configuration;
+using Todolist.Service.Auth.Exceptions;
 using Todolist.Service.Auth.Models;
+using Todolist.Service.Auth.Services;
 
 namespace Todolist.Service.Auth.Controllers
 {
@@ -17,54 +19,17 @@ namespace Todolist.Service.Auth.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        private readonly IAccountService accountService;
 
-        private readonly SignInManager<User> signInManager;
-        private readonly UserManager<User> userManager;
-
-        private readonly AppSettings settings;
-
-        public AuthController(SignInManager<User> signInManager, UserManager<User> userManager, IOptions<AppSettings> settings)
+        public AuthController(IAccountService accountService)
         {
-            this.userManager = userManager;
-            this.signInManager = signInManager;
-            this.settings = settings.Value;
+            this.accountService = accountService;
         }
 
-        [HttpPost]
+        [HttpPost("login")]
         public async Task<string> Login(LoginViewModel model)
         {
-            var result = await signInManager.PasswordSignInAsync(model.Name, model.Password, false, false);
-            if (result.Succeeded)
-            {
-                var user = await userManager.FindByNameAsync(model.Name);
-                return await GenerateJwtToken(user);
-            }
-            throw new ApplicationException("INVALID_LOGIN_ATTEMPT");
-        }
-
-        private Task<string> GenerateJwtToken(User user)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
-            };
-
-            var key = new SymmetricSecurityKey(settings.JwtSecret);
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.Now.AddDays(Convert.ToDouble(1));
-
-            var token = new JwtSecurityToken(
-                null,
-                null,
-                claims,
-                expires : expires,
-                signingCredentials : creds
-            );
-
-            var result = new JwtSecurityTokenHandler().WriteToken(token);
-            return Task.FromResult(result);
+            return await accountService.LoginAsync(model.Name, model.Password);
         }
 
         public class LoginViewModel

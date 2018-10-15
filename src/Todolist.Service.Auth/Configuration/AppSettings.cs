@@ -6,6 +6,8 @@ namespace Todolist.Service.Auth.Configuration
     {
         protected string JwtSecretKey { get; set; }
 
+        public int JwtExpiresSecconds { get; protected set; }
+
         public byte[] JwtSecret
         {
             get
