@@ -25,6 +25,8 @@ namespace Todolist.Service.Auth
 {
     public class Startup
     {
+        private readonly static Action<BinderOptions> SettingsBinder = o => o.BindNonPublicProperties = true;
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -35,6 +37,11 @@ namespace Todolist.Service.Auth
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var section = Configuration.GetSection(nameof(AppSettings));
+            services.Configure<AppSettings>(section, SettingsBinder);
+
+            var appSettings = section.Get<AppSettings>(SettingsBinder);
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddIdentityMongoDbProvider<User, Role>(
                 settings =>
@@ -47,6 +54,7 @@ namespace Todolist.Service.Auth
                     var connection = Configuration.GetConnectionString("MongoDb");
                     options.ConnectionString = connection;
                 });
+
             services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -60,7 +68,7 @@ namespace Todolist.Service.Auth
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("abc")),
+                        IssuerSigningKey = new SymmetricSecurityKey(appSettings.JwtSecret),
                         ValidateIssuer = false,
                         ValidateAudience = false
                     };
